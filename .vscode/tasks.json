@@ -5,7 +5,7 @@
   "tasks": [
     {
       "type": "npm",
-      "script": "build",
+      "script": "prepare",
       "problemMatcher": [
         "$eslint-compact"
       ]

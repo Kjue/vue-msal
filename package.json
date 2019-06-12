@@ -3,9 +3,11 @@
   "version": "0.0.1",
   "description": "Vue authentication using MSAL.js. This is a port from the vue-adal plugin.",
   "main": "lib/bundle.js",
+  "files": [
+    "lib/**"
+  ],
   "scripts": {
-    "build": "rollup -c && uglifyjs lib/bundle.js -c -m -o lib/bundle.min.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "prepare": "rollup -c && uglifyjs lib/bundle.js -c -m -o lib/bundle.min.js"
   },
   "author": "Mikael Lavi <mikael@lamek.fi>",
   "license": "MIT",
