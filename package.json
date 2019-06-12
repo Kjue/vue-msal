@@ -12,8 +12,10 @@
   "author": "Mikael Lavi <mikael@lamek.fi>",
   "license": "MIT",
   "dependencies": {
-    "msal": "^1.0.1",
-    "vue": "^2.6.10"
+    "msal": "^1.0.1"
+  },
+  "peerDependencies": {
+    "vue": "^2.5.0"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
