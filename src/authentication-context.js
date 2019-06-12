@@ -35,18 +35,21 @@ class AuthenticationContext {
    */
   constructor (opts) {
     // Initialization to options or default
-    this.config = opts.config || {
+    this.config = Object.assign({}, {
       clientId: 'your aad application client id',
       cacheLocation: 'localStorage',
       tenant: null,
       redirectUri: 'base uri for this application',
-      graphScopes: ['user.read']
-    }
+      graphScopes: ['user.read'],
+      usePopup: true
+    }, opts.config)
+
+    // Leaving the options available to the library visible under comments intentionally to see what are available.
     this.applicationConfig = {
       auth: {
         clientId: this.config.clientId,
         redirectUri: this.config.redirectUri,
-        authority: !this.config.tenant ? `https://login.microsoftonline.com/${this.config.tenant}` : undefined
+        authority: !this.config.tenant ? `https://login.microsoftonline.com/${this.config.tenant}` : 'https://login.microsoftonline.com/common'
         // validateAuthority?: boolean;
         // postLogoutRedirectUri?: string | (() => string);
         // navigateToLoginRequestUrl?: boolean;
@@ -80,20 +83,6 @@ class AuthenticationContext {
     // this.msalContext.handleAuthenticationResponse(this.authResponseCallback);
 
 
-    // this.adalContext = opts.adalContext || new AdalContext(this.config)
-
-    // if (this.adalContext.isCallback(window.location.hash) || window !== window.parent) {
-    //   // This was a redirect from a login attempt
-    //   this.adalContext.handleWindowCallback()
-    // } else {
-    //   var user = this.adalContext.getCachedUser()
-    //   if (user && window.parent === window && !window.opener) {
-    //     this.user = user
-    //   } else if (this.requireAuthOnInitialize) {
-    //     this.login()
-    //   }
-    // }
-
     if (this.requireAuthOnInitialize) {
       this.acquireToken(opts.config.clientId, (err, token) => {
         if (err) {
@@ -101,12 +90,15 @@ class AuthenticationContext {
         }
       })
       if (this.config.graphScopes) {
+        const _this = this
         Object.keys(this.config.graphScopes).forEach(function (key, index) {
-          const resource = this.config.graphScopes[key]
-          this.acquireToken(resource, (err, token) => {
+          const resource = _this.config.graphScopes[key]
+          _this.acquireToken(resource, (err, token) => {
             if (err) {
               console.log('Could not get token')
             }
+          }).catch(reason => {
+            console.log('Could not get token:', reason)
           })
         })
       }
@@ -211,6 +203,7 @@ class AuthenticationContext {
       .acquireTokenSilent({
         scopes: this.applicationConfig.graphScopes,
         account: this.applicationConfig.auth.clientId,
+        authority: this.applicationConfig.auth.authority
       })
       .then(authResponse => {
         _this.user = authResponse.account
@@ -218,11 +211,12 @@ class AuthenticationContext {
       },
       error => {
         console.log(error)
-        return _this.msalContext
-          .loginPopup({
-            account: this.applicationConfig.auth.clientId,
-          })
-          .then(
+        const opts = { account: this.applicationConfig.auth.clientId }
+        const loginTask = this.config.usePopup
+          ? _this.msalContext.loginPopup(opts)
+          : _this.msalContext.loginRedirect(opts)
+
+        loginTask.then(
             authResponse => {
               _this.user = authResponse.account
               if (callback) callback(null, authResponse.accessToken)
